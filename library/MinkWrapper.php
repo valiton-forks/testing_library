@@ -28,7 +28,7 @@ class MinkWrapper extends BaseTestCase
 {
 
     /** @var \Selenium\Client Selenium client. Used only with selenium driver. */
-    protected $client = null;
+    protected $seleniumClient = null;
 
     /** @var \Behat\Mink\Session Mink session */
     protected static $minkSession = null;
@@ -104,9 +104,6 @@ class MinkWrapper extends BaseTestCase
             case 'selenium2':
                 $oDriver = new \Behat\Mink\Driver\Selenium2Driver($browserName);
                 break;
-            case 'sahi':
-                $oDriver = new \Behat\Mink\Driver\SahiDriver($browserName, $this->_getClient());
-                break;
             case 'goutte':
                 $aClientOptions = array();
                 $oGoutteClient = new \Behat\Mink\Driver\Goutte\Client();
@@ -117,7 +114,7 @@ class MinkWrapper extends BaseTestCase
                 $oDriver = new \Behat\Mink\Driver\ZombieDriver();
                 break;
             case 'selenium':
-                $client = $this->_getClient();
+                $client = $this->_getSeleniumClient();
                 $oDriver = new \Behat\Mink\Driver\SeleniumDriver($browserName, shopURL, $client);
                 break;
             default:
@@ -131,14 +128,14 @@ class MinkWrapper extends BaseTestCase
     /**
      * @return \Selenium\Client
      */
-    protected function _getClient()
+    protected function _getSeleniumClient()
     {
-        if (is_null($this->client)) {
+        if (is_null($this->seleniumClient)) {
             $config = $this->getTestConfig();
-            $this->client = new \Selenium\Client($config->getSeleniumServerIp(), $config->getSeleniumServerPort());
+            $this->seleniumClient = new \Selenium\Client($config->getSeleniumServerIp(), $config->getSeleniumServerPort());
         }
 
-        return $this->client;
+        return $this->seleniumClient;
     }
 
     /**
