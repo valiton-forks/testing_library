@@ -63,6 +63,20 @@ class AcceptanceTestCase extends MinkWrapper
         "dynexport_do" => "basefrm/dynexport_do",
     );
 
+    /** @var array List of error messages to check in page on each page load. */
+    protected $errorTexts = array(
+        "Warning: " => "PHP Warning is in the page",
+        "ADODB_Exception" => "ADODB Exception is in the page",
+        "Fatal error: " => "PHP Fatal error is in the page",
+        "Catchable fatal error: " => " Catchable fatal error is in the page",
+        "Notice: " => "PHP Notice is in the page",
+        "exception '" => "Uncaught exception is in the page",
+        "does not exist or is not accessible!" => "Warning about not existing function is in the page ",
+        "ERROR: Tran" => "Missing translation for constant (ERROR: Translation for...)",
+        "EXCEPTION_" => "Exception - component not found (EXCEPTION_)",
+        "oxException" => "Exception is in page"
+    );
+
     /** @var bool Tracks the start of tests run. */
     protected static $testsSuiteStarted = false;
 
@@ -282,6 +296,35 @@ class AcceptanceTestCase extends MinkWrapper
         return $sString;
     }
 
+    /**
+     * Asserts that two variables are equal.
+     *
+     * @param mixed  $expected
+     * @param mixed  $actual
+     * @param string $message
+     * @param int    $delta
+     * @param int    $maxDepth
+     * @param bool   $canonicalize
+     * @param bool   $ignoreCase
+     */
+    public static function assertEquals(
+        $expected,
+        $actual,
+        $message = '',
+        $delta = 0,
+        $maxDepth = 10,
+        $canonicalize = false,
+        $ignoreCase = false
+    ) {
+        $expected = self::translate($expected);
+        $actual = self::translate($actual);
+
+        $expected = self::_clearString($expected);
+        $sMessage = "'$expected' != '$actual' with message: " . $message;
+
+        parent::assertEquals($expected, $actual, $sMessage, $delta, $maxDepth, $canonicalize, $ignoreCase);
+    }
+
     /* --------------------- eShop frontend side only functions ---------------------- */
 
     /**
@@ -408,19 +451,6 @@ class AcceptanceTestCase extends MinkWrapper
         $aParams = array_merge($aParams, $additionalParams);
 
         $this->openNewWindow($this->_getShopUrl($aParams, $shopId), false);
-    }
-
-    /**
-     * mouseOver element and then click specified link.
-     *
-     * @param string $element1 MouseOver element.
-     * @param string $element2 Clickable element.
-     */
-    public function mouseOverAndClick($element1, $element2)
-    {
-        $this->mouseOver($element1);
-        $this->waitForItemAppear($element2);
-        $this->clickAndWait($element2);
     }
 
     /**
@@ -677,11 +707,191 @@ class AcceptanceTestCase extends MinkWrapper
         try {
             $this->waitForPageToLoad(10000);
         } catch (Exception $e) {
-            $this->openNewWindow(shopURL . "admin");
+            $this->openNewWindow($this->getTestConfig()->getShopUrl() . "admin");
         }
 
         $this->checkForErrors();
     }
+
+    /**
+     * Clicks new item button
+     *
+     * @param string $sButtonSelector
+     */
+    public function clickCreateNewItem($sButtonSelector = "btn.new")
+    {
+        $this->frame('edit');
+        $this->click($sButtonSelector);
+        $this->waitForFrameToLoad('list', 5000);
+        $this->waitForFrameToLoad('edit', 5000, true);
+    }
+
+    /**
+     * Opens admin list item. Activates edit frame after
+     *
+     * @param string $sSorterSelector
+     */
+    public function changeListSorting($sSorterSelector)
+    {
+        $this->frame('list');
+        $this->clickAndWaitFrame($sSorterSelector);
+        $this->checkForErrors();
+    }
+
+    /**
+     * Opens admin list item. Activates edit frame after
+     *
+     * @param string $sItemName
+     * @param string $sSearchColumn
+     */
+    public function openListItem($sItemName, $sSearchColumn = '')
+    {
+        $sItemName = $this->translate($sItemName);
+        $this->frame('list');
+        $sItemLocator = ((strpos($sItemName, 'link=') === false) ? 'link=' : '') . $sItemName;
+
+        if ($sSearchColumn && !$this->isElementPresent($sItemLocator)) {
+            $this->type("where$sSearchColumn", $sItemName);
+            $this->clickAndWaitFrame('submitit');
+        }
+        $this->clickAndWaitFrame($sItemLocator, 'edit');
+        $this->frame('edit');
+        $this->checkForErrors();
+    }
+
+    /**
+     * Opens admin list item. Activates edit frame after
+     *
+     * @param string $sPageSelector
+     */
+    public function openListPage($sPageSelector)
+    {
+        $this->frame('list');
+        $this->clickAndWaitFrame($sPageSelector);
+        $this->checkForErrors();
+    }
+
+    /**
+     * clicks entered link in list frame and selects edit frame.
+     *
+     * @param string $tabName tab name that should be opened.
+     */
+    public function openTab($tabName)
+    {
+        $this->frame('list');
+        $tabName = "//div[@class='tabs']//a[text()='$tabName']";
+        $this->clickAndWaitFrame($tabName, 'edit');
+        $this->frame('edit');
+    }
+
+    /**
+     * Opens admin list item. Activates edit frame after
+     *
+     * @param string $sLanguage
+     * @param string $sSelectLocator
+     */
+    public function changeAdminListLanguage($sLanguage, $sSelectLocator = 'changelang')
+    {
+        $sSelectedFrame = $this->getSelectedFrame();
+        $this->frame('list');
+        $this->_changeAdminLanguage($sLanguage, $sSelectLocator);
+        $this->frame($sSelectedFrame);
+    }
+
+    /**
+     * Opens admin list item. Activates edit frame after
+     *
+     * @param string $sLanguage
+     * @param string $sSelectLocator
+     */
+    public function changeAdminEditLanguage($sLanguage, $sSelectLocator = 'subjlang')
+    {
+        $this->frame('edit');
+        $this->_changeAdminLanguage($sLanguage, $sSelectLocator);
+    }
+
+    /**
+     * Selects language and checks if it stays selected. If not - re-selects.
+     *
+     * @param string $sLanguage
+     * @param string $sSelectLocator
+     */
+    protected function _changeAdminLanguage($sLanguage, $sSelectLocator)
+    {
+        $this->selectAndWaitFrame($sSelectLocator, "label=$sLanguage", "edit");
+        if ($this->getSelectedLabel($sSelectLocator) != $sLanguage) {
+            $this->selectAndWaitFrame($sSelectLocator, "label=$sLanguage", "edit");
+        }
+        $this->checkForErrors();
+    }
+
+    /**
+     * Clicks delete item button in list
+     *
+     * @param string $sId List item id.
+     */
+    public function clickDeleteListItem($sId = '1')
+    {
+        $this->frame('list');
+        $this->clickAndConfirm("del.$sId", "edit");
+    }
+
+    /**
+     * Selects popUp window and waits till it is fully loaded.
+     *
+     * @param string $popUpElement element used to check if popUp is fully loaded.
+     */
+    public function usePopUp($popUpElement = "//div[@id='container1_c']/table/tbody[2]/tr[1]/td[1]")
+    {
+        $this->selectWindow("ajaxpopup");
+        $this->windowMaximize();
+        $this->waitForElement($popUpElement);
+        $this->checkForErrors();
+    }
+
+    /**
+     * Drags and drops element to specified location.
+     *
+     * @param string $item      element which will be dragged and dropped.
+     * @param string $container place where to drop specified element.
+     */
+    public function dragAndDrop($item, $container)
+    {
+        $this->click($item);
+        $this->checkForErrors();
+        $this->dragAndDropToObject($item, $container);
+        if ($this->isElementPresent($item)) {
+            sleep(1);
+        }
+    }
+
+    /**
+     * Waits for element to show up in specific place.
+     *
+     * @param string $value       expected text to show up.
+     * @param string $locator     place where specified text must show up.
+     * @param int    $iTimeToWait timeout
+     *
+     * @return null
+     */
+    public function waitForAjax($value, $locator, $iTimeToWait = 20)
+    {
+        $iTimeToWait = $iTimeToWait * $this->_iWaitTimeMultiplier;
+        for ($iSecond = 0; $iSecond <= $iTimeToWait; $iSecond++) {
+            try {
+                if ($this->isElementPresent($locator) && $value == $this->getText($locator)) {
+                    return;
+                }
+            } catch (Exception $e) {
+            }
+            if ($iSecond >= $iTimeToWait) {
+                $this->retryTest("Ajax timeout while waiting for '${locator}' or value is not equal to '${value}' ");
+            }
+            usleep(500000);
+        }
+    }
+
+    /* -------------------------- Frames handling ------------------------ */
 
     /**
      * Waits for frame to load by frame name
@@ -765,215 +975,44 @@ class AcceptanceTestCase extends MinkWrapper
         return $sFrame;
     }
 
-    /**
-     * Clicks new item button
-     *
-     * @param string $sButtonSelector
-     */
-    public function clickCreateNewItem($sButtonSelector = "btn.new")
-    {
-        $this->frame('edit');
-        $this->click($sButtonSelector);
-        $this->waitForFrameToLoad('list', 5000);
-        $this->waitForFrameToLoad('edit', 5000, true);
-    }
-
-    /**
-     * Opens admin list item. Activates edit frame after
-     *
-     * @param string $sSorterSelector
-     */
-    public function changeListSorting($sSorterSelector)
-    {
-        $this->frame('list');
-        $this->clickAndWaitFrame($sSorterSelector);
-        $this->checkForErrors();
-    }
-
-    /**
-     * Opens admin list item. Activates edit frame after
-     *
-     * @param string $sItemName
-     * @param string $sSearchColumn
-     */
-    public function openListItem($sItemName, $sSearchColumn = '')
-    {
-        $sItemName = $this->translate($sItemName);
-        $this->frame('list');
-        $sItemLocator = ((strpos($sItemName, 'link=') === false) ? 'link=' : '') . $sItemName;
-
-        if ($sSearchColumn && !$this->isElementPresent($sItemLocator)) {
-            $this->type("where$sSearchColumn", $sItemName);
-            $this->clickAndWaitFrame('submitit');
-        }
-        $this->clickAndWaitFrame($sItemLocator, 'edit');
-        $this->frame('edit');
-        $this->checkForErrors();
-    }
-
-    /**
-     * Opens admin list item. Activates edit frame after
-     *
-     * @param string $sPageSelector
-     */
-    public function openListPage($sPageSelector)
-    {
-        $this->frame('list');
-        $this->clickAndWaitFrame($sPageSelector);
-        $this->checkForErrors();
-    }
-
-    /**
-     * clicks entered link in list frame and selects edit frame.
-     *
-     * @param string $tabName tab name that should be opened.
-     */
-    public function openTab($tabName)
-    {
-        $this->frame('list');
-        $tabName = "//div[@class='tabs']//a[text()='$tabName']";
-        $this->clickAndWaitFrame($tabName, 'edit');
-        $this->frame('edit');
-    }
-
-    /**
-     * Asserts that two variables are equal.
-     *
-     * @param mixed  $expected
-     * @param mixed  $actual
-     * @param string $message
-     * @param int    $delta
-     * @param int    $maxDepth
-     * @param bool   $canonicalize
-     * @param bool   $ignoreCase
-     */
-    public static function assertEquals(
-        $expected,
-        $actual,
-        $message = '',
-        $delta = 0,
-        $maxDepth = 10,
-        $canonicalize = false,
-        $ignoreCase = false
-    ) {
-        $expected = self::translate($expected);
-        $actual = self::translate($actual);
-
-        $expected = self::_clearString($expected);
-        $sMessage = "'$expected' != '$actual' with message: " . $message;
-
-        parent::assertEquals($expected, $actual, $sMessage, $delta, $maxDepth, $canonicalize, $ignoreCase);
-    }
-
-    /**
-     * Opens admin list item. Activates edit frame after
-     *
-     * @param string $sLanguage
-     * @param string $sSelectLocator
-     */
-    public function changeAdminListLanguage($sLanguage, $sSelectLocator = 'changelang')
-    {
-        $sSelectedFrame = $this->getSelectedFrame();
-        $this->frame('list');
-        $this->_changeAdminLanguage($sLanguage, $sSelectLocator);
-        $this->frame($sSelectedFrame);
-    }
-
-    /**
-     * Opens admin list item. Activates edit frame after
-     *
-     * @param string $sLanguage
-     * @param string $sSelectLocator
-     */
-    public function changeAdminEditLanguage($sLanguage, $sSelectLocator = 'subjlang')
-    {
-        $this->frame('edit');
-        $this->_changeAdminLanguage($sLanguage, $sSelectLocator);
-    }
-
-    /**
-     * Selects language and checks if it stays selected. If not - re-selects.
-     *
-     * @param string $sLanguage
-     * @param string $sSelectLocator
-     */
-    protected function _changeAdminLanguage($sLanguage, $sSelectLocator)
-    {
-        $this->selectAndWaitFrame($sSelectLocator, "label=$sLanguage", "edit");
-        if ($this->getSelectedLabel($sSelectLocator) != $sLanguage) {
-            $this->selectAndWaitFrame($sSelectLocator, "label=$sLanguage", "edit");
-        }
-        $this->checkForErrors();
-    }
-
-    /**
-     * Clicks delete item button in list
-     *
-     * @param string $sId List item id.
-     */
-    public function clickDeleteListItem($sId = '1')
-    {
-        $this->frame('list');
-        $this->clickAndConfirm("del.$sId", "edit");
-    }
-
-    /**
-     * Selects popUp window and waits till it is fully loaded.
-     *
-     * @param string $popUpElement element used to check if popUp is fully loaded.
-     */
-    public function usePopUp($popUpElement = "//div[@id='container1_c']/table/tbody[2]/tr[1]/td[1]")
-    {
-        $this->waitForPopUp("ajaxpopup", 15000);
-        $this->selectWindow("ajaxpopup");
-        $this->windowMaximize("ajaxpopup");
-        $this->waitForElement($popUpElement);
-        $this->checkForErrors();
-    }
-
-    /**
-     * Waits for element to show up in specific place.
-     *
-     * @param string $value       expected text to show up.
-     * @param string $locator     place where specified text must show up.
-     * @param int    $iTimeToWait timeout
-     *
-     * @return null
-     */
-    public function waitForAjax($value, $locator, $iTimeToWait = 20)
-    {
-        $iTimeToWait = $iTimeToWait * $this->_iWaitTimeMultiplier;
-        for ($iSecond = 0; $iSecond <= $iTimeToWait; $iSecond++) {
-            try {
-                if ($this->isElementPresent($locator) && $value == $this->getText($locator)) {
-                    return;
-                }
-            } catch (Exception $e) {
-            }
-            if ($iSecond >= $iTimeToWait) {
-                $this->retryTest("Ajax timeout while waiting for '${locator}' or value is not equal to '${value}' ");
-            }
-            usleep(500000);
-        }
-    }
-
-    /**
-     * Drags and drops element to specified location.
-     *
-     * @param string $item      element which will be dragged and dropped.
-     * @param string $container place where to drop specified element.
-     */
-    public function dragAndDrop($item, $container)
-    {
-        $this->click($item);
-        $this->checkForErrors();
-        $this->dragAndDropToObject($item, $container);
-        if ($this->isElementPresent($item)) {
-            sleep(1);
-        }
-    }
-
     /* ------------------------ Selenium API related functions, override functions ---------------------- */
+
+    /**
+     * Opens new browser window
+     *
+     * @param string $sUrl         Url to open
+     * @param bool   $blClearCache Clears cache before opening page
+     */
+    public function openNewWindow($sUrl, $blClearCache = true)
+    {
+        $this->selectedFrame = 'relative=top';
+        $this->selectWindow(null);
+        $this->windowMaximize();
+
+        if ($blClearCache) {
+            $this->clearTemp();
+        }
+
+        try {
+            $this->open($sUrl);
+        } catch (Exception $e) {
+            usleep(500000);
+            $this->open($sUrl);
+        }
+        $this->checkForErrors();
+    }
+
+    /**
+     * mouseOver element and then click specified link.
+     *
+     * @param string $element1 MouseOver element.
+     * @param string $element2 Clickable element.
+     */
+    public function mouseOverAndClick($element1, $element2)
+    {
+        $this->mouseOver($element1);
+        $this->clickAndWait($element2);
+    }
 
     /**
      * Opens new window in popUp
@@ -1294,7 +1333,8 @@ class AcceptanceTestCase extends MinkWrapper
     {
         $sLocator = $this->translate($sLocator);
         $this->waitForElement($sLocator, 5);
-        return parent::click($sLocator);
+
+        parent::click($sLocator);
     }
 
     /**
@@ -1305,7 +1345,8 @@ class AcceptanceTestCase extends MinkWrapper
     {
         $sSelector = $this->translate($sSelector);
         $sOptionSelector = $this->translate($sOptionSelector);
-        return parent::select($sSelector, $sOptionSelector);
+
+        parent::select($sSelector, $sOptionSelector);
     }
 
     /**
@@ -1318,23 +1359,6 @@ class AcceptanceTestCase extends MinkWrapper
     {
         $sLocator = $this->translate($sLocator);
         return parent::isVisible($sLocator);
-    }
-
-    /**
-     * Skip test code until given date.
-     *
-     * @param string $sDate Date string in format 'Y-m-d'.
-     *
-     * @return bool
-     */
-    public function skipTestBlockUntil($sDate)
-    {
-        $blSkip = false;
-        $oDate = DateTime::createFromFormat('Y-m-d', $sDate);
-        if (time() >= $oDate->getTimestamp()) {
-            $blSkip = true;
-        }
-        return $blSkip;
     }
 
     /**
@@ -1483,9 +1507,6 @@ class AcceptanceTestCase extends MinkWrapper
         $this->assertEquals($sExpectedValue, $sValue, $sFormedMessage);
     }
 
-    /* ------------------------ Mink related functions ---------------------------------- */
-
-
 //----------------------------- Tests BoilerPlate related functions ------------------------------------
 
     /**
@@ -1581,6 +1602,7 @@ class AcceptanceTestCase extends MinkWrapper
         $oServiceCaller->setParameter('classparams', $aClassParams);
         $oServiceCaller->setParameter('functionparams', $aFunctionParams);
 
+        $mResponse = null;
         try {
             $mResponse = $oServiceCaller->callService('ShopObjectConstructor', $sShopId);
         } catch (Exception $oException) {
@@ -1668,20 +1690,8 @@ class AcceptanceTestCase extends MinkWrapper
     public function checkForErrors()
     {
         $sHTML = $this->getHtmlSource();
-        $aErrorTexts = array(
-            "Warning: " => "PHP Warning is in the page",
-            "ADODB_Exception" => "ADODB Exception is in the page",
-            "Fatal error: " => "PHP Fatal error is in the page",
-            "Catchable fatal error: " => " Catchable fatal error is in the page",
-            "Notice: " => "PHP Notice is in the page",
-            "exception '" => "Uncaught exception is in the page",
-            "does not exist or is not accessible!" => "Warning about not existing function is in the page ",
-            "ERROR: Tran" => "Missing translation for constant (ERROR: Translation for...)",
-            "EXCEPTION_" => "Exception - component not found (EXCEPTION_)",
-            "oxException" => "Exception is in page"
-        );
 
-        foreach ($aErrorTexts as $sError => $sMessage) {
+        foreach ($this->errorTexts as $sError => $sMessage) {
             if (strpos($sHTML, $sError) !== false) {
                 $this->fail($sMessage);
             }
@@ -1996,13 +2006,14 @@ class AcceptanceTestCase extends MinkWrapper
      */
     protected function _getShopUrl($aParams = array(), $sShopId = null)
     {
-        if ($sShopId && oxSHOPID != 'oxbaseshop') {
+        $currentShopId = $this->getTestConfig()->getShopId();
+        if ($sShopId && $currentShopId != 'oxbaseshop') {
             $aParams['shp'] = $sShopId;
-        } elseif (isSUBSHOP) {
-            $aParams['shp'] = oxSHOPID;
+        } elseif ($currentShopId) {
+            $aParams['shp'] = $currentShopId;
         }
 
-        return shopURL . "index.php?" . http_build_query($aParams);
+        return $this->getTestConfig()->getShopUrl() . "index.php?" . http_build_query($aParams);
     }
 
     /**

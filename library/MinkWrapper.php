@@ -160,10 +160,14 @@ class MinkWrapper extends BaseTestCase
      */
     public function selectWindow($sId)
     {
-        $this->getMinkSession()->getDriver()->switchToWindow($sId);
-        $this->selectedWindow = $sId;
-        if (is_null($sId)) {
-            $this->selectedFrame = 'relative=top';
+        try {
+            $this->getMinkSession()->getDriver()->switchToWindow($sId);
+            $this->selectedWindow = $sId;
+            if (is_null($sId)) {
+                $this->selectedFrame = 'relative=top';
+            }
+        } catch (\Behat\Mink\Exception\Exception $e) {
+            // Do nothing if methods not implemented, for example with headless driver.
         }
     }
 
@@ -215,7 +219,11 @@ class MinkWrapper extends BaseTestCase
      */
     public function windowMaximize()
     {
-        $this->getMinkSession()->getDriver()->getBrowser()->windowMaximize();
+        try {
+            $this->getMinkSession()->getDriver()->getBrowser()->windowMaximize();
+        } catch (\Behat\Mink\Exception\Exception $e) {
+            // Do nothing if methods not implemented, for example with headless driver.
+        }
     }
 
     /**
