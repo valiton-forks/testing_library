@@ -46,7 +46,7 @@ class AcceptanceTestCase extends MinkWrapper
     protected $_blStartMinkSession = false;
 
     /** @var string Default Mink driver. */
-    protected $_blDefaultMinkDriver = 'selenium';
+    protected $_blDefaultMinkDriver = 'selenium2';
 
     /** @var bool Is logging of function calls length enabled */
     protected $_blEnableLog = false;

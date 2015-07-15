@@ -110,7 +110,21 @@ class MinkWrapper extends BaseTestCase
         $browserName = $this->getTestConfig()->getBrowserName();
         switch ($sDriver) {
             case 'selenium2':
-                $oDriver = new \Behat\Mink\Driver\Selenium2Driver($browserName);
+                $capabilities = array(
+                    'browserName'       => $browserName,
+                    'version'           => 'ANY',
+                    'platform'          => 'ANY',
+                    'browserVersion'    => 'ANY',
+                    'browser'           => 'phantomjs',
+                    'name'              => 'Behat Test',
+                    'deviceOrientation' => 'ANY',
+                    'deviceType'        => 'ANY',
+                    'selenium-version'  => 'ANY'
+                );
+                $oDriver = new \Behat\Mink\Driver\Selenium2Driver($browserName, null);
+                break;
+            case 'sahi':
+                $oDriver = new \Behat\Mink\Driver\SahiDriver($browserName, $this->getSahiClient());
                 break;
             case 'goutte':
                 $aClientOptions = array();
@@ -119,7 +133,9 @@ class MinkWrapper extends BaseTestCase
                 $oDriver = new \Behat\Mink\Driver\GoutteDriver($oGoutteClient);
                 break;
             case 'zombie':
-                $oDriver = new \Behat\Mink\Driver\ZombieDriver();
+                $oDriver = new \Behat\Mink\Driver\ZombieDriver(
+                    new \Behat\Mink\Driver\NodeJS\Server\ZombieServer('127.0.0.1', 8124, 'node')
+                );
                 break;
             case 'selenium':
                 $client = $this->_getSeleniumClient();
@@ -144,6 +160,12 @@ class MinkWrapper extends BaseTestCase
         }
 
         return $this->seleniumClient;
+    }
+
+    protected function getSahiClient()
+    {
+        $connection = new \Behat\SahiClient\Connection(null, 'localhost', 9999);
+        return new \Behat\SahiClient\Client($connection);
     }
 
     /**
@@ -216,7 +238,8 @@ class MinkWrapper extends BaseTestCase
      */
     public function getTitle()
     {
-        return $this->getMinkDriver()->getBrowser()->getTitle();
+        return '';
+//        return $this->getMinkDriver()->getBrowser()->getTitle();
     }
 
     /**
@@ -225,7 +248,8 @@ class MinkWrapper extends BaseTestCase
     public function windowMaximize()
     {
         try {
-            $this->getMinkDriver()->getBrowser()->windowMaximize();
+        $this->getMinkSession()->getDriver()->getWebDriverSession()->window('current')->maximize();
+//            $this->getMinkDriver()->getBrowser()->windowMaximize();
         } catch (\Behat\Mink\Exception\Exception $e) {
             // Do nothing if methods not implemented, for example with headless driver.
         }
@@ -237,7 +261,8 @@ class MinkWrapper extends BaseTestCase
      */
     public function openWindow($sUrl, $sId)
     {
-        $this->getMinkDriver()->getBrowser()->openWindow($sUrl, $sId);
+        $this->getMinkDriver()->getWebDriverSession()->openWindow($sUrl, $sId);
+//        $this->getMinkDriver()->getBrowser()->openWindow($sUrl, $sId);
     }
 
     /**
@@ -482,6 +507,7 @@ class MinkWrapper extends BaseTestCase
      */
     public function getText($sSelector)
     {
+        return str_replace(array("\n", "&nbsp;") ,array("", " "), preg_replace( "/ +/", " ", trim( strip_tags( $this->getElement( $sSelector )->getHtml() ) ) ) );
         $oElement = $this->getElement($sSelector);
         try {
             $sText = $oElement->getText();
@@ -501,7 +527,8 @@ class MinkWrapper extends BaseTestCase
      */
     public function getValue($sSelector)
     {
-        $mValue = $this->_getValue($this->getElement($sSelector)->getXpath());
+        $mValue = $this->getElement( $sSelector )->getValue();
+//        $mValue = $this->_getValue($this->getElement($sSelector)->getXpath());
 
         $sType = $this->getElement($sSelector)->getAttribute('type');
         if ($sType == 'checkbox') {
@@ -575,7 +602,8 @@ class MinkWrapper extends BaseTestCase
      */
     public function getConfirmation()
     {
-        $this->getMinkDriver()->getBrowser()->getConfirmation();
+        $this->getMinkSession()->getDriver()->getWebDriverSession()->accept_alert();
+//        $this->getMinkDriver()->getBrowser()->getConfirmation();
     }
 
     /**
@@ -583,8 +611,9 @@ class MinkWrapper extends BaseTestCase
      */
     public function close()
     {
-        $this->getMinkDriver()->getBrowser()->close();
-        $this->getMinkDriver()->switchToWindow(null);
+        $this->getMinkSession()->getDriver()->getWebDriverSession()->deleteWindow();
+//        $this->getMinkDriver()->getBrowser()->close();
+//        $this->getMinkDriver()->switchToWindow(null);
     }
 
     /**
@@ -697,7 +726,7 @@ class MinkWrapper extends BaseTestCase
         $readyState = $blCheckIfLoading ? $this->getMinkDriver()->evaluateScript()->getEval() : 'loading';
 
         if ($readyState == 'loading' || $readyState == 'interactive') {
-            $this->getMinkDriver()->getBrowser()->waitForPageToLoad($iTimeout * $this->_iWaitTimeMultiplier);
+//            $this->getMinkDriver()->getBrowser()->waitForPageToLoad($iTimeout * $this->_iWaitTimeMultiplier);
         }
     }
 
