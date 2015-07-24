@@ -227,35 +227,6 @@ class AcceptanceTestCase extends MinkWrapper
     /* --------------------- Functions for both admin and frontend -----------------------------*/
 
     /**
-     * Opens new browser window
-     *
-     * @param string $sUrl         Url to open
-     * @param bool   $blClearCache Clears cache before opening page
-     */
-    public function openNewWindow($sUrl, $blClearCache = true)
-    {
-        $this->selectedFrame = 'relative=top';
-        try {
-            $this->selectWindow(null);
-            $this->windowMaximize();
-        } catch (\Behat\Mink\Exception\Exception $e) {
-            // Do nothing if methods not implemented, for example with headless driver.
-        }
-
-        if ($blClearCache) {
-            $this->clearTemp();
-        }
-
-        try {
-            $this->open($sUrl);
-        } catch (Exception $e) {
-            usleep(500000);
-            $this->open($sUrl);
-        }
-        $this->checkForErrors();
-    }
-
-    /**
      * $_oTranslator setter
      *
      * @param object $oTranslator
