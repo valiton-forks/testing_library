@@ -932,23 +932,13 @@ class oxAcceptanceTestCase extends oxMinkWrapper
      * @param string $locator     place where specified text must show up.
      * @param int    $iTimeToWait timeout
      *
-     * @return null
+     * @deprecated use waitForText instead.
+     *
+     * @return bool
      */
     public function waitForAjax($value, $locator, $iTimeToWait = 20)
     {
-        $iTimeToWait = $iTimeToWait * $this->_iWaitTimeMultiplier;
-        for ($iSecond = 0; $iSecond <= $iTimeToWait; $iSecond++) {
-            try {
-                if ($this->isElementPresent($locator) && $value == $this->getText($locator)) {
-                    return;
-                }
-            } catch (Exception $e) {
-            }
-            if ($iSecond >= $iTimeToWait) {
-                $this->retryTest("Ajax timeout while waiting for '${locator}' or value is not equal to '${value}' ");
-            }
-            usleep(500000);
-        }
+        return $this->waitForText($value, $locator, $iTimeToWait);
     }
 
     /**
@@ -1169,6 +1159,27 @@ class oxAcceptanceTestCase extends oxMinkWrapper
     {
         $mTextMsg = $this->translate($mTextMsg);
         $this->_waitForAppear('isTextPresent', $mTextMsg, $iTimeToWait);
+    }
+
+    /**
+     * Waits for element to show up in specific place.
+     *
+     * @param string $value       expected text to show up.
+     * @param string $locator     place where specified text must show up.
+     * @param int    $iTimeToWait timeout
+     *
+     * @return bool
+     */
+    public function waitForElementText($value, $locator, $iTimeToWait = 20)
+    {
+        $iTimeToWait = $iTimeToWait * $this->_iWaitTimeMultiplier;
+        for ($iSecond = 0; $iSecond <= $iTimeToWait; $iSecond++) {
+            if ($value == $this->getText($locator)) {
+                return true;
+            }
+            usleep(500000);
+        }
+        return false;
     }
 
     /**
@@ -1456,6 +1467,21 @@ class oxAcceptanceTestCase extends oxMinkWrapper
     {
         $sFailMessage = "Element '$sLocator' should not be editable! " . $sMessage;
         $this->assertFalse($this->isEditable($sLocator), $sFailMessage);
+    }
+
+    /**
+     * Asserts that element text is equal to provided one.
+     *
+     * @param string $value
+     * @param string $locator
+     * @param string $message
+     */
+    public function assertElementText($value, $locator, $message = '')
+    {
+        $message = $message ? : "Element '$locator' was not found or does not match value '$value'";
+        if (!$this->waitForElementText($value, $locator, 10)) {
+            $this->fail($message);
+        }
     }
 
     /**
