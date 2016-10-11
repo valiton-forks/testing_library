@@ -1679,6 +1679,7 @@ class oxAcceptanceTestCase extends oxMinkWrapper
     {
         $sHTML = $this->getHtmlSource();
         $aErrorTexts = array(
+            "<b>Warning</b>: " => "PHP Warning is in the page",
             "Warning: " => "PHP Warning is in the page",
             "ADODB_Exception" => "ADODB Exception is in the page",
             "Fatal error: " => "PHP Fatal error is in the page",
