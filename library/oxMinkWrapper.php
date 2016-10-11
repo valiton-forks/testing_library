@@ -20,6 +20,9 @@
  */
 
 use \Behat\Mink\Element\NodeElement;
+use \Behat\Mink\Exception\ElementException;
+use \Exception;
+use \InvalidArgumentException;
 
 require_once TEST_LIBRARY_PATH . "/oxBaseTestCase.php";
 
@@ -249,7 +252,11 @@ class oxMinkWrapper extends oxBaseTestCase
      */
     public function click($sSelector)
     {
-        $this->getElement($sSelector)->click();
+        try {
+            $this->getElement($sSelector)->click();
+        } catch (ElementException $e) {
+            $this->getElement($sSelector)->click();
+        }
     }
 
     /**
@@ -260,7 +267,11 @@ class oxMinkWrapper extends oxBaseTestCase
      */
     public function type($sSelector, $sText)
     {
-        $this->getElement($sSelector)->setValue($sText);
+        try {
+            $this->getElement($sSelector)->setValue($sText);
+        } catch (ElementException $e) {
+            $this->getElement($sSelector)->setValue($sText);
+        }
     }
 
     /**
@@ -490,7 +501,11 @@ class oxMinkWrapper extends oxBaseTestCase
     {
         $mValue = $this->_getValue($this->getElement($sSelector)->getXpath());
 
-        $sType = $this->getElement($sSelector)->getAttribute('type');
+        try {
+            $sType = $this->getElement($sSelector)->getAttribute('type');
+        } catch (InvalidArgumentException $e) {
+            $sType = $this->getElement($sSelector)->getAttribute('type');
+        }
         if ($sType == 'checkbox') {
             $mValue = $mValue ? 'on' : 'off';
         }
@@ -753,7 +768,11 @@ class oxMinkWrapper extends oxBaseTestCase
      */
     public function typeKeys($locator, $value)
     {
-        return $this->getMinkSession()->getDriver()->getBrowser()->typeKeys($locator, $value);
+        try {
+            return $this->getMinkSession()->getDriver()->getBrowser()->typeKeys($locator, $value);
+        } catch (\Selenium\Exception $e) {
+            return $this->getMinkSession()->getDriver()->getBrowser()->typeKeys($locator, $value);
+        }
     }
 
     /**

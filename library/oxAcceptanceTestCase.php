@@ -896,6 +896,7 @@ class oxAcceptanceTestCase extends oxMinkWrapper
         if ($this->getSelectedLabel($sSelectLocator) != $sLanguage) {
             $this->selectAndWaitFrame($sSelectLocator, "label=$sLanguage", "edit");
         }
+        usleep(100000);
         $this->checkForErrors();
     }
 
@@ -1341,7 +1342,12 @@ class oxAcceptanceTestCase extends oxMinkWrapper
     {
         $sLocator = $this->translate($sLocator);
         $sFailMessage = "Element $sLocator was not found! " . $sMessage;
-        $this->assertTrue($this->isElementPresent($sLocator), $sFailMessage);
+        $isElementPresent = $this->isElementPresent($sLocator);
+        if (!$isElementPresent) {
+            $this->waitForItemAppear($sLocator, 5);
+            $isElementPresent = $this->isElementPresent($sLocator);
+        }
+        $this->assertTrue($isElementPresent, $sFailMessage);
     }
 
     /**
@@ -1354,7 +1360,12 @@ class oxAcceptanceTestCase extends oxMinkWrapper
     public function assertElementNotPresent($sLocator, $sMessage = '')
     {
         $sFailMessage = "Element $sLocator was found though it should not be present! " . $sMessage;
-        $this->assertFalse($this->isElementPresent($sLocator), $sFailMessage);
+        $isElementPresent = $this->isElementPresent($sLocator);
+        if ($isElementPresent) {
+            $this->waitForItemDisappear($sLocator, 5);
+            $isElementPresent = $this->isElementPresent($sLocator);
+        }
+        $this->assertFalse($isElementPresent, $sFailMessage);
     }
 
     /**
@@ -1368,7 +1379,12 @@ class oxAcceptanceTestCase extends oxMinkWrapper
     {
         $sText = $this->translate($sText);
         $sFailMessage = "Text '$sText' was not found! " . $sMessage;
-        $this->assertTrue($this->isTextPresent($sText), $sFailMessage);
+        $isTextPresent = $this->isTextPresent($sText);
+        if (!$isTextPresent) {
+            $this->waitForText($sText, false, 5);
+            $isTextPresent = $this->isTextPresent($sText);
+        }
+        $this->assertTrue($isTextPresent, $sFailMessage);
     }
 
     /**
@@ -1382,7 +1398,12 @@ class oxAcceptanceTestCase extends oxMinkWrapper
     {
         $sText = $this->translate($sText);
         $sFailMessage = "Text '$sText' should not be found! " . $sMessage;
-        $this->assertFalse($this->isTextPresent($sText), $sFailMessage);
+        $isTextPresent = $this->isTextPresent($sText);
+        if ($isTextPresent) {
+            $this->waitForTextDisappear($sText, 5);
+            $isTextPresent = $this->isTextPresent($sText);
+        }
+        $this->assertFalse($isTextPresent, $sFailMessage);
     }
 
     /**
