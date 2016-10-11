@@ -53,23 +53,23 @@ class Cache
     public function clearTemporaryDirectory()
     {
         if ($sCompileDir = oxRegistry::get('oxConfigFile')->getVar('sCompileDir')) {
-            $this->removeDirectory($sCompileDir, false);
+            $this->removeTemporaryDirectory($sCompileDir, false);
         }
     }
 
     /**
      * Delete all files and dirs recursively
      *
-     * @param string $dir directory to delete
-     * @param bool   $rmBaseDir keep target directory
-     *
-     * @return null
+     * @param string $dir       Directory to delete
+     * @param bool   $rmBaseDir Keep target directory
      */
-    private function removeDirectory($dir, $rmBaseDir = false)
+    private function removeTemporaryDirectory($dir, $rmBaseDir = false)
     {
-        $files = array_diff(scandir($dir), array('.', '..'));
+        $itemsToIgnore = array('.', '..', '.htaccess');
+
+        $files = array_diff(scandir($dir), $itemsToIgnore);
         foreach ($files as $file) {
-            (is_dir("$dir/$file")) ? $this->removeDirectory("$dir/$file", true) : @unlink("$dir/$file");
+            (is_dir("$dir/$file")) ? $this->removeTemporaryDirectory("$dir/$file", true) : @unlink("$dir/$file");
         }
         if ($rmBaseDir) {
             @rmdir($dir);
