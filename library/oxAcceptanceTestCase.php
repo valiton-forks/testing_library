@@ -56,6 +56,13 @@ class oxAcceptanceTestCase extends oxMinkWrapper
         "dynexport_do" => "basefrm/dynexport_do",
     );
 
+    /**
+     * Language id.
+     *
+     * @var string
+     */
+    protected $translateLanguageId = '1';
+
     /** @var bool Tracks the start of tests run. */
     protected static $testsSuiteStarted = false;
 
@@ -99,7 +106,7 @@ class oxAcceptanceTestCase extends oxMinkWrapper
             self::$testsSuitePath = $currentTestsSuitePath;
             $this->setUpTestsSuite($currentTestsSuitePath);
         }
-        $this->getTranslator()->setLanguage(1);
+        $this->getTranslator()->setLanguage($this->translateLanguageId);
 
         $this->clearTemp();
         if ($this->isMinkSessionStarted()) {
@@ -1779,7 +1786,7 @@ class oxAcceptanceTestCase extends oxMinkWrapper
             $this->stopMinkSession();
         }
 
-        $this->getTranslator()->setLanguage(1);
+        $this->getTranslator()->setLanguage($this->translateLanguageId);
     }
 
     /**
