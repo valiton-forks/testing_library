@@ -1245,7 +1245,7 @@ class oxAcceptanceTestCase extends oxMinkWrapper
      * @param string $locator
      * @param int    $sTimeToWait
      */
-    protected function _waitForDisappear($sMethod, $locator, $sTimeToWait = 30)
+    protected function _waitForDisappear($sMethod, $locator, $sTimeToWait = 30, $sFailMessage = '')
     {
         $sTimeToWait = $sTimeToWait * 2 * $this->_iWaitTimeMultiplier;
         for ($iSecond = 0; $iSecond <= $sTimeToWait; $iSecond++) {
@@ -1257,7 +1257,10 @@ class oxAcceptanceTestCase extends oxMinkWrapper
             }
 
             if ($iSecond >= $sTimeToWait) {
-                $this->fail("Timeout waiting for '$locator' to disappear");
+                if (!$sFailMessage) {
+                    $sFailMessage = "Timeout waiting for '$locator' to disappear";
+                }
+                $this->fail($sFailMessage);
             }
             usleep(500000);
         }
@@ -1346,12 +1349,10 @@ class oxAcceptanceTestCase extends oxMinkWrapper
      */
     public function assertElementNotPresent($sLocator, $sMessage = '')
     {
-        $sLocator = $this->translate($sLocator);
-        $this->_waitForDisappear('isElementPresent', $sLocator, 5);
-        $isElementPresent = $this->isElementPresent($sLocator);
-
         $sFailMessage = "Element $sLocator was found though it should not be present! " . $sMessage;
-        $this->assertFalse($isElementPresent, $sFailMessage);
+
+        $sLocator = $this->translate($sLocator);
+        $this->_waitForDisappear('isElementPresent', $sLocator, 5, $sFailMessage);
     }
 
     /**
@@ -1380,12 +1381,10 @@ class oxAcceptanceTestCase extends oxMinkWrapper
      */
     public function assertTextNotPresent($sText, $sMessage = '')
     {
-        $sText = $this->translate($sText);
-        $this->_waitForDisappear('isTextPresent', $sText, 5);
-        $isTextPresent = $this->isTextPresent($sText);
-
         $sFailMessage = "Text '$sText' should not be found! " . $sMessage;
-        $this->assertFalse($isTextPresent, $sFailMessage);
+
+        $sText = $this->translate($sText);
+        $this->_waitForDisappear('isTextPresent', $sText, 5, $sFailMessage);
     }
 
     /**
