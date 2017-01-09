@@ -314,10 +314,11 @@ class DatabaseHandler
      */
     protected function checkForDatabaseError($query, $callingFunctionName)
     {
-        $dbCon = $this->getDbConnection();
-        if (is_a($dbCon, 'PDO') && ('00000' !== $dbCon->errorCode())) {
-            $errorInfo = $dbCon->errorInfo();
-            throw new Exception('PDO error code: ' . $dbCon->errorCode() . ' in function ' . $callingFunctionName . ' -- ' . $errorInfo[2] . ' -- ' . $query);
-        }
+        #TODO check reset-shop first
+        #$dbCon = $this->getDbConnection();
+        #if (is_a($dbCon, 'PDO') && ('00000' !== $dbCon->errorCode())) {
+        #    $errorInfo = $dbCon->errorInfo();
+        #    throw new Exception('PDO error code: ' . $dbCon->errorCode() . ' in function ' . $callingFunctionName . ' -- ' . $errorInfo[2] . ' -- ' . $query);
+        #}
     }
 }

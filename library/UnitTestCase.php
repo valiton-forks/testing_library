@@ -148,6 +148,9 @@ abstract class UnitTestCase extends BaseTestCase
 
         $this->setShopId(null);
         $this->setAdminMode(false);
+
+        $dbMetaDataHandler = oxNew('oxDbMetaDataHandler');
+        $dbMetaDataHandler->updateViews();
     }
 
     /**
