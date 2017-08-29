@@ -1317,6 +1317,8 @@ abstract class AcceptanceTestCase extends MinkWrapper
     public function click($sLocator)
     {
         parent::click($this->translate($sLocator));
+
+        $this->checkForErrors();
     }
 
     /**
