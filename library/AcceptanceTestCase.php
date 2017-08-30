@@ -1753,7 +1753,9 @@ abstract class AcceptanceTestCase extends MinkWrapper
     }
 
     /**
-     * Activates the theme for running acceptance tests on.
+     * Activates the theme for running acceptance tests on active subshop and parent shop.
+     * There are no tests which tests if theme is different for subshop, but there are tests
+     * which relies that azure is active for both subshops.
      *
      * @todo Refactor this method to use ThemeSwitcher service. This will require a prior refactoring of the testing library.
      *
@@ -1768,7 +1770,12 @@ abstract class AcceptanceTestCase extends MinkWrapper
 
         $testConfig = new TestConfig();
         $shopId = $testConfig->getShopId();
+
         \OxidEsales\Eshop\Core\Registry::getConfig()->setShopId($shopId);
+
+        if ($shopId > 1) {
+            \OxidEsales\Eshop\Core\Registry::getConfig()->setShopId(1);
+        }
 
         $theme->activate();
 
