@@ -1,0 +1,8 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Execution file to run script which generates setting file for Testing Library.
+ * This file could be used directly or from other tool like composer.
+ */
+\Incenteev\ParameterHandler\ScriptHandler::buildParameters();
