@@ -25,7 +25,8 @@
         "bin/runmetrics",
         "bin/runtests",
         "bin/runtests-coverage",
-        "bin/runtests-selenium"
+        "bin/runtests-selenium",
+        "bin/oe-eshop-testing_library-configure"
     ],
     "include-path": [
         "../../symfony/yaml/"
