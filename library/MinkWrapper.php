@@ -202,7 +202,7 @@ abstract class MinkWrapper extends BaseTestCase
      */
     public function windowMaximize()
     {
-        $this->getMinkSession()->getDriver()->getBrowser()->windowMaximize();
+        $this->getMinkSession()->getDriver()->maximizeWindow();
     }
 
     /**
@@ -211,7 +211,7 @@ abstract class MinkWrapper extends BaseTestCase
      */
     public function openWindow($sUrl, $sId)
     {
-        $this->getMinkSession()->getDriver()->getBrowser()->openWindow($sUrl, $sId);
+        #$this->getMinkSession()->getDriver()->getBrowser()->openWindow($sUrl, $sId);
     }
 
     /**
@@ -703,7 +703,8 @@ abstract class MinkWrapper extends BaseTestCase
         $readyState = $blCheckIfLoading ? $this->getMinkSession()->getDriver()->getBrowser()->getEval('window.document.readyState') : 'loading';
 
         if ($readyState == 'loading' || $readyState == 'interactive') {
-            $this->getMinkSession()->getDriver()->getBrowser()->waitForPageToLoad($iTimeout * $this->_iWaitTimeMultiplier);
+            #$this->getMinkSession()->getDriver()->getBrowser()->waitForPageToLoad($iTimeout * $this->_iWaitTimeMultiplier);
+            $this->getMinkSession()->getDriver()->wait($iTimeout * $this->_iWaitTimeMultiplier);
         }
     }
 
