@@ -37,7 +37,7 @@ class LoginBox extends Component
 
         //TODO: this added because of syn.js issue
         //Related with https://tracker.moodle.org/browse/MDL-44286
-        $this->_oHeader->getLogInLink()->click();
+        #$this->_oHeader->getLogInLink()->click();
 
         $oInputPassword = new Input($this->getNode(), 'lgn_pwd');
         $oInputPassword->setValue($sPassword);

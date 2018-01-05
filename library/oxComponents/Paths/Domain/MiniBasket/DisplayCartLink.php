@@ -12,5 +12,6 @@ class DisplayCartLink extends Path
     /**
      * @var string
      */
-    protected $_sXPath = "//p/a[contains(@class, 'textButton')]";
+    #protected $_sXPath = "//p/a[contains(@class, 'textButton')]";
+    protected $_sXPath = "//a[contains(text(),'cart')]";
 }

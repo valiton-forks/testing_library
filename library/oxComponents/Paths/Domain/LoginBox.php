@@ -12,5 +12,5 @@ class LoginBox extends Path
     /**
      * @var string
      */
-    protected $_sXPath = "//div[contains(@class, 'loginForm')]";
+    protected $_sXPath = "//div[@id='loginBox']";
 }

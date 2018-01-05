@@ -12,5 +12,5 @@ class MiniBasket extends Path
     /**
      * @var string
      */
-    protected $_sXPath = "//div[contains(@id, 'minibasket_container')]";
+    protected $_sXPath = "//div[contains(@class, 'minibasket-menu-box')]";
 }
