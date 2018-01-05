@@ -1,0 +1,31 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Copyright © OXID eSales AG. All rights reserved.
+ * See LICENSE file for license details.
+ */
+
+require_once __DIR__ .'/../base.php';
+
+$testConfig = new OxidEsales\TestingLibrary\TestConfig();
+
+$arguments = array();
+array_shift($argv);
+foreach ($argv as $argument) {
+    $arguments[] = (strpos($argument, '-') === 0) ? $argument : escapeshellarg($argument);
+}
+
+$php = getenv('PHPBIN') ? getenv('PHPBIN') : 'php';
+
+$codec = $testConfig->getVendorDirectory() ."/bin/codecept";
+if (!file_exists($codec)) {
+    $codec = "codecept";
+}
+
+$codec = "$php $codec run -c /var/www/oxideshop/tests/Codeception ";
+
+$returnCode = 0;
+
+passthru($codec);
+
+exit($returnCode);

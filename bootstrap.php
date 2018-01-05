@@ -13,7 +13,7 @@ define('OXID_PHP_UNIT', true);
 
 $sTestFilePath = strtolower(end($_SERVER['argv']));
 $sTestType = 'unit';
-foreach (array('acceptance', 'selenium', 'javascript') as $search) {
+foreach (array('acceptance', 'selenium', 'javascript', 'codeception') as $search) {
     if (strpos($sTestFilePath, $search) !== false) {
         $sTestType = 'acceptance';
         break;
