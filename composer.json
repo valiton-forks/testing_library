@@ -25,7 +25,8 @@
         "bin/runmetrics",
         "bin/runtests",
         "bin/runtests-coverage",
-        "bin/runtests-selenium"
+        "bin/runtests-selenium",
+        "bin/runtests-functional"
     ],
     "include-path": [
         "../../symfony/yaml/"
