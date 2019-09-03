@@ -21,7 +21,7 @@
         "phpunit/php-code-coverage": "^5.3",
         "phpunit/phpcov": "^4.0",
         "codeception/codeception": "^2.3",
-        "oxid-esales/codeception-modules": "dev-master",
+        "oxid-esales/codeception-modules": "dev-master-template-for-module",
         "oxid-esales/codeception-page-objects": "dev-master"
     },
     "bin": [
