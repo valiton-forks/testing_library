@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Added VERBOSE and DEBUG env. variables to trigger respective options of phpunit for the run
 
+### Changed
+- Removed database encoding
+
 ## [v7.0.1] - 2019-11-07
 
 ### Fixed
