@@ -7,6 +7,7 @@
 namespace OxidEsales\TestingLibrary;
 
 use Exception;
+use Throwable;
 use DateTime;
 use ReflectionClass;
 use PHPUnit_Framework_ExpectationFailedException as ExpectationFailedException;
@@ -1857,11 +1858,11 @@ abstract class AcceptanceTestCase extends MinkWrapper
     /**
      * Fix for showing stack trace with phpunit 3.6 and later
      *
-     * @param Exception $exception
+     * @param Exception|Throwable $exception
      *
-     * @throws Exception
+     * @throws Exception|Throwable
      */
-    protected function onNotSuccessfulTest(Exception $exception)
+    protected function onNotSuccessfulTest($exception)
     {
         $this->storeExceptionLogEntries();
         $this->exceptionLogHelper->clearExceptionLogFile();
